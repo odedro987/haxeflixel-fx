@@ -6,3 +6,8 @@ abstract EmitAngle(Float) from Float to Float
 	var LEFT = 180.0;
 	var UP = 270.0;
 }
+
+enum EmitterType
+{
+	LINE;
+}
