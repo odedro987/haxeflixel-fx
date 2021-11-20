@@ -1,5 +1,6 @@
 package customEmitter;
 
+import flixel.effects.particles.FlxEmitter;
 
 class CustomEmitter extends FlxEmitter
 {
