@@ -10,4 +10,5 @@ abstract EmitAngle(Float) from Float to Float
 enum EmitterType
 {
 	LINE;
+	SPIRAL;
 }
