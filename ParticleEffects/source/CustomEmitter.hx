@@ -89,12 +89,14 @@ class CustomEmitter extends FlxEmitter
 		return this;
 	}
 
-	public function addLinePath(X:Float, Y:Float, Speed:Int):CustomEmitter
+	public function addPolygonPath(Points:Array<FlxPoint>, Speed:Int, Type:EmitterPath = EmitterPath.POLYGON):CustomEmitter
 	{
-		pathType = EmitterPath.LINE;
+		pathType = Type;
 		pathPoints.push(originPos);
-		pathPoints.push(FlxPoint.get());
-		pathPoints[1].set(originPos.x + X, originPos.y + Y);
+		for (point in Points)
+		{
+			pathPoints.push(point);
+		}
 		currPathPoint = 0;
 		pathWalkSpeed = Speed;
 		emitterPath = function(elapsed:Float)
@@ -104,19 +106,14 @@ class CustomEmitter extends FlxEmitter
 		return this;
 	}
 
+	public function addLinePath(X:Float, Y:Float, Speed:Int):CustomEmitter
+	{
+		return addPolygonPath([new FlxPoint(originPos.x + X, originPos.y + Y)], Speed, EmitterPath.LINE);
+	}
+
 	public function addTrianglePath(PointB:FlxPoint, PointC:FlxPoint, Speed:Int):CustomEmitter
 	{
-		pathType = EmitterPath.TRIANGLE;
-		pathPoints.push(originPos);
-		pathPoints.push(PointB);
-		pathPoints.push(PointC);
-		currPathPoint = 0;
-		pathWalkSpeed = Speed;
-		emitterPath = function(elapsed:Float)
-		{
-			goToNextPoint(elapsed);
-		}
-		return this;
+		return addPolygonPath([PointB, PointC], Speed, EmitterPath.TRIANGLE);
 	}
 
 	/**	
