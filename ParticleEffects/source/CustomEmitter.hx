@@ -5,6 +5,7 @@ import Types.EmitterType;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.math.FlxPoint;
+import flixel.util.FlxDestroyUtil;
 
 class CustomEmitter extends FlxEmitter
 {
@@ -50,6 +51,22 @@ class CustomEmitter extends FlxEmitter
 			emitBehavior(elapsed);
 		if (emitterPath != null)
 			emitterPath(elapsed);
+	}
+
+	/**
+	 * Clean up memory.
+	 */
+	override public function destroy():Void
+	{
+		emitBehavior = null;
+		emitterPath = null;
+
+		FlxDestroyUtil.put(originPos);
+
+		for (point in pathPoints)
+		{
+			FlxDestroyUtil.put(point);
+		}
 	}
 
 	/**	
