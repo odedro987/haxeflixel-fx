@@ -1,12 +1,16 @@
 package;
 
+import Types.EmitterPath;
 import Types.EmitterType;
 import flixel.effects.particles.FlxEmitter;
+import flixel.math.FlxPoint;
 
 class CustomEmitter extends FlxEmitter
 {
 	private var type:EmitterType;
+	private var pathType:EmitterPath;
 	private var emitBehavior:Float->Void;
+	private var emitterPath:Float->Void;
 
 	// Variables for emitting behaviors
 	private var startAngle:Float;
@@ -14,10 +18,18 @@ class CustomEmitter extends FlxEmitter
 	private var spinSpeed:Int;
 	private var currAngle:Float;
 
+	// Variables for emitter paths
+	private var originPos:FlxPoint;
+	private var pathWalkSpeed:Int;
+	private var pathPoints:Array<FlxPoint>;
+	private var currPathPoint:Int;
 
 	public function new(X:Float, Y:Float, Size:Int)
 	{
 		super(X, Y, Size);
+		originPos = FlxPoint.get();
+		originPos.set(X, Y);
+		pathPoints = [];
 
 		// Temporary paritcles
 		makeParticles(4, 4);
@@ -33,6 +45,8 @@ class CustomEmitter extends FlxEmitter
 		super.update(elapsed);
 		if (emitBehavior != null)
 			emitBehavior(elapsed);
+		if (emitterPath != null)
+			emitterPath(elapsed);
 	}
 
 	/**	
@@ -40,7 +54,7 @@ class CustomEmitter extends FlxEmitter
 	**/
 	public function addStraightEmit(StartAngle:Float = 0, MaxSpread:Int = 0):CustomEmitter
 	{
-		type = EmitterType.LINE;
+		type = EmitterType.STRAIGHT;
 		startAngle = StartAngle;
 		maxSpread = MaxSpread;
 		launchAngle.set(startAngle - maxSpread, startAngle + maxSpread);
@@ -63,4 +77,68 @@ class CustomEmitter extends FlxEmitter
 		}
 		return this;
 	}
+
+	/**	
+	 * Builder functions for adding emitter paths
+	**/
+	public function addLinePath(X:Float, Y:Float, Speed:Int):CustomEmitter
+	{
+		pathType = EmitterPath.LINE;
+		pathPoints.push(originPos);
+		pathPoints.push(FlxPoint.get());
+		pathPoints[1].set(originPos.x + X, originPos.y + Y);
+		currPathPoint = 0;
+		pathWalkSpeed = Speed;
+		emitterPath = function(elapsed:Float)
+		{
+			goToNextPoint(elapsed);
+		}
+		return this;
 	}
+
+	public function addTrianglePath(PointB:FlxPoint, PointC:FlxPoint, Speed:Int):CustomEmitter
+	{
+		pathType = EmitterPath.TRIANGLE;
+		pathPoints.push(originPos);
+		pathPoints.push(PointB);
+		pathPoints.push(PointC);
+		currPathPoint = 0;
+		pathWalkSpeed = Speed;
+		emitterPath = function(elapsed:Float)
+		{
+			goToNextPoint(elapsed);
+		}
+		return this;
+	}
+
+	/**	
+	 * Helper functions
+	**/
+	private function goToNextPoint(elapsed:Float)
+	{
+		var nextPoint = currPathPoint < pathPoints.length - 1 ? currPathPoint + 1 : 0;
+		var dx = pathPoints[nextPoint].x - pathPoints[currPathPoint].x;
+		var dy = pathPoints[nextPoint].y - pathPoints[currPathPoint].y;
+		var angle = Math.atan2(dy, dx);
+		x += pathWalkSpeed * elapsed * Math.cos(angle);
+		y += pathWalkSpeed * elapsed * Math.sin(angle);
+		if (distanceTo(pathPoints[nextPoint]) <= 1)
+		{
+			currPathPoint = nextPoint;
+		}
+	}
+
+	private function getDir(Start:Float, End:Float):Int
+	{
+		if (Start < End)
+			return 1;
+		if (Start == End)
+			return 0;
+		return -1;
+	}
+
+	private function distanceTo(Destination:FlxPoint):Float
+	{
+		return Math.sqrt(Math.pow((x - Destination.x), 2) + Math.pow((y - Destination.y), 2));
+	}
+}
