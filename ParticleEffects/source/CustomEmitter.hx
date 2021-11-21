@@ -18,13 +18,14 @@ class CustomEmitter extends FlxEmitter
 	private var startAngle:Float;
 	private var maxSpread:Int;
 	private var spinSpeed:Int;
-	private var currAngle:Float;
+	private var currEmitAngle:Float;
 
 	// Variables for emitter paths
 	private var originPos:FlxPoint;
 	private var pathWalkSpeed:Int;
 	private var pathPoints:Array<FlxPoint>;
 	private var currPathPoint:Int;
+	private var currPathAngle:Float;
 
 	public function new(X:Float, Y:Float, Size:Int)
 	{
@@ -67,15 +68,15 @@ class CustomEmitter extends FlxEmitter
 	{
 		type = EmitterType.SPIRAL;
 		spinSpeed = SpinSpeed;
-		currAngle = StartAngle;
+		currEmitAngle = StartAngle;
 		emitBehavior = function(elapsed:Float)
 		{
-			currAngle += spinSpeed * elapsed;
+			currEmitAngle += spinSpeed * elapsed;
 
-			if (currAngle > 360)
-				currAngle = 0;
+			if (currEmitAngle > 360)
+				currEmitAngle = 0;
 
-			launchAngle.set(currAngle, currAngle);
+			launchAngle.set(currEmitAngle, currEmitAngle);
 		}
 		return this;
 	}
@@ -114,6 +115,36 @@ class CustomEmitter extends FlxEmitter
 	public function addTrianglePath(PointB:FlxPoint, PointC:FlxPoint, Speed:Int):CustomEmitter
 	{
 		return addPolygonPath([PointB, PointC], Speed, EmitterPath.TRIANGLE);
+	}
+
+	public function addEllipsePath(Width:Float, Height:Float, Speed:Int, Type:EmitterPath = EmitterPath.ELLIPSE):CustomEmitter
+	{
+		pathType = Type;
+		var center = FlxPoint.get();
+		center.set(originPos.x + Width, originPos.y);
+		currPathAngle = 0;
+		emitterPath = function(elapsed:Float)
+		{
+			currPathAngle += elapsed * Speed;
+			if (currPathAngle > 360)
+				currPathAngle = 0;
+
+			var newX = (center.x + Math.cos(currPathAngle) * Width) - x;
+			var newY = (center.y + Math.sin(currPathAngle) * Height) - y;
+			x += newX;
+			y += newY;
+
+			if (isRelativeParticles)
+			{
+				moveParticles(newX, newY);
+			}
+		}
+		return this;
+	}
+
+	public function addCirclePath(Radius:Int, Speed:Int):CustomEmitter
+	{
+		return addEllipsePath(Radius, Radius, Speed, EmitterPath.CIRCLE);
 	}
 
 	/**	
