@@ -3,6 +3,7 @@ package;
 import Types.EmitterPath;
 import Types.EmitterType;
 import flixel.effects.particles.FlxEmitter;
+import flixel.effects.particles.FlxParticle;
 import flixel.math.FlxPoint;
 
 class CustomEmitter extends FlxEmitter
@@ -11,6 +12,7 @@ class CustomEmitter extends FlxEmitter
 	private var pathType:EmitterPath;
 	private var emitBehavior:Float->Void;
 	private var emitterPath:Float->Void;
+	private var isRelativeParticles:Bool;
 
 	// Variables for emitting behaviors
 	private var startAngle:Float;
@@ -81,6 +83,12 @@ class CustomEmitter extends FlxEmitter
 	/**	
 	 * Builder functions for adding emitter paths
 	**/
+	public function setRelativeParticles(Flag:Bool = true):CustomEmitter
+	{
+		isRelativeParticles = Flag;
+		return this;
+	}
+
 	public function addLinePath(X:Float, Y:Float, Speed:Int):CustomEmitter
 	{
 		pathType = EmitterPath.LINE;
@@ -120,12 +128,29 @@ class CustomEmitter extends FlxEmitter
 		var dx = pathPoints[nextPoint].x - pathPoints[currPathPoint].x;
 		var dy = pathPoints[nextPoint].y - pathPoints[currPathPoint].y;
 		var angle = Math.atan2(dy, dx);
-		x += pathWalkSpeed * elapsed * Math.cos(angle);
-		y += pathWalkSpeed * elapsed * Math.sin(angle);
+		var newX = pathWalkSpeed * elapsed * Math.cos(angle);
+		var newY = pathWalkSpeed * elapsed * Math.sin(angle);
+		x += newX;
+		y += newY;
+
+		if (isRelativeParticles)
+		{
+			moveParticles(newX, newY);
+		}
+
 		if (distanceTo(pathPoints[nextPoint]) <= 1)
 		{
 			currPathPoint = nextPoint;
 		}
+	}
+
+	private function moveParticles(X:Float, Y:Float)
+	{
+		forEachAlive(function(particle:FlxParticle)
+		{
+			particle.x += X;
+			particle.y += Y;
+		});
 	}
 
 	private function getDir(Start:Float, End:Float):Int
