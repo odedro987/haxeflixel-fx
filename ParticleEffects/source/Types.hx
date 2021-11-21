@@ -15,6 +15,11 @@ enum EmitterType
 
 enum EmitterPath
 {
+	POLYGON;
 	LINE;
 	TRIANGLE;
+	RECTANGLE;
+	SQUARE;
+	ELLIPSE;
+	CIRCLE;
 }

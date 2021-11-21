@@ -5,6 +5,7 @@ import Types.EmitterType;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.math.FlxPoint;
+import flixel.util.FlxDestroyUtil;
 
 class CustomEmitter extends FlxEmitter
 {
@@ -18,13 +19,14 @@ class CustomEmitter extends FlxEmitter
 	private var startAngle:Float;
 	private var maxSpread:Int;
 	private var spinSpeed:Int;
-	private var currAngle:Float;
+	private var currEmitAngle:Float;
 
 	// Variables for emitter paths
 	private var originPos:FlxPoint;
 	private var pathWalkSpeed:Int;
 	private var pathPoints:Array<FlxPoint>;
 	private var currPathPoint:Int;
+	private var currPathAngle:Float;
 
 	public function new(X:Float, Y:Float, Size:Int)
 	{
@@ -51,6 +53,22 @@ class CustomEmitter extends FlxEmitter
 			emitterPath(elapsed);
 	}
 
+	/**
+	 * Clean up memory.
+	 */
+	override public function destroy():Void
+	{
+		emitBehavior = null;
+		emitterPath = null;
+
+		FlxDestroyUtil.put(originPos);
+
+		for (point in pathPoints)
+		{
+			FlxDestroyUtil.put(point);
+		}
+	}
+
 	/**	
 	 * Builder functions for adding emitting behaviors
 	**/
@@ -67,15 +85,15 @@ class CustomEmitter extends FlxEmitter
 	{
 		type = EmitterType.SPIRAL;
 		spinSpeed = SpinSpeed;
-		currAngle = StartAngle;
+		currEmitAngle = StartAngle;
 		emitBehavior = function(elapsed:Float)
 		{
-			currAngle += spinSpeed * elapsed;
+			currEmitAngle += spinSpeed * elapsed;
 
-			if (currAngle > 360)
-				currAngle = 0;
+			if (currEmitAngle > 360)
+				currEmitAngle = 0;
 
-			launchAngle.set(currAngle, currAngle);
+			launchAngle.set(currEmitAngle, currEmitAngle);
 		}
 		return this;
 	}
@@ -89,12 +107,14 @@ class CustomEmitter extends FlxEmitter
 		return this;
 	}
 
-	public function addLinePath(X:Float, Y:Float, Speed:Int):CustomEmitter
+	public function addPolygonPath(Points:Array<FlxPoint>, Speed:Int, Type:EmitterPath = EmitterPath.POLYGON):CustomEmitter
 	{
-		pathType = EmitterPath.LINE;
+		pathType = Type;
 		pathPoints.push(originPos);
-		pathPoints.push(FlxPoint.get());
-		pathPoints[1].set(originPos.x + X, originPos.y + Y);
+		for (point in Points)
+		{
+			pathPoints.push(point);
+		}
 		currPathPoint = 0;
 		pathWalkSpeed = Speed;
 		emitterPath = function(elapsed:Float)
@@ -104,19 +124,58 @@ class CustomEmitter extends FlxEmitter
 		return this;
 	}
 
+	public function addLinePath(X:Float, Y:Float, Speed:Int):CustomEmitter
+	{
+		return addPolygonPath([new FlxPoint(originPos.x + X, originPos.y + Y)], Speed, EmitterPath.LINE);
+	}
+
 	public function addTrianglePath(PointB:FlxPoint, PointC:FlxPoint, Speed:Int):CustomEmitter
 	{
-		pathType = EmitterPath.TRIANGLE;
-		pathPoints.push(originPos);
-		pathPoints.push(PointB);
-		pathPoints.push(PointC);
-		currPathPoint = 0;
-		pathWalkSpeed = Speed;
+		return addPolygonPath([PointB, PointC], Speed, EmitterPath.TRIANGLE);
+	}
+
+	public function addRectanglePath(Width:Float, Height:Float, Speed:Int, Type:EmitterPath = EmitterPath.RECTANGLE):CustomEmitter
+	{
+		return addPolygonPath([
+			new FlxPoint(originPos.x + Width, originPos.y),
+			new FlxPoint(originPos.x + Width, originPos.y + Height),
+			new FlxPoint(originPos.x, originPos.y + Height)
+		], Speed, Type);
+	}
+
+	public function addSquarePath(Length:Float, Speed:Int):CustomEmitter
+	{
+		return addRectanglePath(Length, Length, Speed, EmitterPath.SQUARE);
+	}
+
+	public function addEllipsePath(Width:Float, Height:Float, Speed:Int, Type:EmitterPath = EmitterPath.ELLIPSE):CustomEmitter
+	{
+		pathType = Type;
+		var center = FlxPoint.get();
+		center.set(originPos.x + Width, originPos.y);
+		currPathAngle = 0;
 		emitterPath = function(elapsed:Float)
 		{
-			goToNextPoint(elapsed);
+			currPathAngle += elapsed * Speed;
+			if (currPathAngle > 360)
+				currPathAngle = 0;
+
+			var newX = (center.x + Math.cos(currPathAngle) * Width) - x;
+			var newY = (center.y + Math.sin(currPathAngle) * Height) - y;
+			x += newX;
+			y += newY;
+
+			if (isRelativeParticles)
+			{
+				moveParticles(newX, newY);
+			}
 		}
 		return this;
+	}
+
+	public function addCirclePath(Radius:Int, Speed:Int):CustomEmitter
+	{
+		return addEllipsePath(Radius, Radius, Speed, EmitterPath.CIRCLE);
 	}
 
 	/**	
