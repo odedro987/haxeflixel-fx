@@ -117,6 +117,20 @@ class CustomEmitter extends FlxEmitter
 		return addPolygonPath([PointB, PointC], Speed, EmitterPath.TRIANGLE);
 	}
 
+	public function addRectanglePath(Width:Float, Height:Float, Speed:Int, Type:EmitterPath = EmitterPath.RECTANGLE):CustomEmitter
+	{
+		return addPolygonPath([
+			new FlxPoint(originPos.x + Width, originPos.y),
+			new FlxPoint(originPos.x + Width, originPos.y + Height),
+			new FlxPoint(originPos.x, originPos.y + Height)
+		], Speed, Type);
+	}
+
+	public function addSquarePath(Length:Float, Speed:Int):CustomEmitter
+	{
+		return addRectanglePath(Length, Length, Speed, EmitterPath.SQUARE);
+	}
+
 	public function addEllipsePath(Width:Float, Height:Float, Speed:Int, Type:EmitterPath = EmitterPath.ELLIPSE):CustomEmitter
 	{
 		pathType = Type;

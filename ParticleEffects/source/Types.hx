@@ -18,6 +18,8 @@ enum EmitterPath
 	POLYGON;
 	LINE;
 	TRIANGLE;
+	RECTANGLE;
+	SQUARE;
 	ELLIPSE;
 	CIRCLE;
 }
