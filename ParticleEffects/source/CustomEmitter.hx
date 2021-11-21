@@ -13,7 +13,9 @@ class CustomEmitter extends FlxEmitter
 	private var pathType:EmitterPath;
 	private var emitBehavior:Float->Void;
 	private var emitterPath:Float->Void;
+	private var emitterSpin:Float->Void;
 	private var isRelativeParticles:Bool;
+	private var isSpinning:Bool;
 
 	// Variables for emitting behaviors
 	private var startAngle:Float;
@@ -51,6 +53,8 @@ class CustomEmitter extends FlxEmitter
 			emitBehavior(elapsed);
 		if (emitterPath != null)
 			emitterPath(elapsed);
+		if (isSpinning)
+			emitterSpin(elapsed);
 	}
 
 	/**
@@ -72,29 +76,32 @@ class CustomEmitter extends FlxEmitter
 	/**	
 	 * Builder functions for adding emitting behaviors
 	**/
+	public function setEmitterSpin(SpinSpeed:Int):CustomEmitter
+	{
+		if (type != null)
+		{
+			isSpinning = true;
+			spinSpeed = SpinSpeed;
+			emitterSpin = function(elapsed:Float)
+			{
+				currEmitAngle += spinSpeed * elapsed;
+
+				if (currEmitAngle > 360)
+					currEmitAngle = 0;
+
+				launchAngle.set(currEmitAngle);
+			}
+		}
+
+		return this;
+	}
+
 	public function addStraightEmit(StartAngle:Float = 0, MaxSpread:Int = 0):CustomEmitter
 	{
 		type = EmitterType.STRAIGHT;
 		startAngle = StartAngle;
 		maxSpread = MaxSpread;
 		launchAngle.set(startAngle - maxSpread, startAngle + maxSpread);
-		return this;
-	}
-
-	public function addSpiralEmit(SpinSpeed:Int = 1, StartAngle:Float = 0):CustomEmitter
-	{
-		type = EmitterType.SPIRAL;
-		spinSpeed = SpinSpeed;
-		currEmitAngle = StartAngle;
-		emitBehavior = function(elapsed:Float)
-		{
-			currEmitAngle += spinSpeed * elapsed;
-
-			if (currEmitAngle > 360)
-				currEmitAngle = 0;
-
-			launchAngle.set(currEmitAngle, currEmitAngle);
-		}
 		return this;
 	}
 
