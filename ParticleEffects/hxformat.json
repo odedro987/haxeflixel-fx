@@ -11,5 +11,14 @@
 		"doWhile": "next",
 		"tryBody": "next",
 		"tryCatch": "next"
-	}
+	},
+	"wrapping": {
+        "methodChain": {
+            "defaultWrap": "onePerLine"
+        },
+		"maxLineLength": 160,
+		"callParameter": {"defaultWrap": "noWrap"},
+ 		"functionSignature": {"defaultWrap": "noWrap"}
+    }
+	
 }
