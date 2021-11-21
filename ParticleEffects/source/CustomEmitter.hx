@@ -11,24 +11,26 @@ class CustomEmitter extends FlxEmitter
 {
 	private var type:EmitterType;
 	private var pathType:EmitterPath;
-	private var emitBehavior:Float->Void;
-	private var emitterPath:Float->Void;
-	private var emitterSpin:Float->Void;
-	private var isRelativeParticles:Bool;
-	private var isSpinning:Bool;
 
 	// Variables for emitting behaviors
-	private var startAngle:Float;
+	private var emitBehavior:Float->Void;
 	private var maxSpread:Int;
 	private var spinSpeed:Int;
 	private var currEmitAngle:Float;
+	private var isSpinning:Bool;
+	private var emitterSpin:Float->Void;
+	private var isMultiShoot:Bool;
+	private var multiShootAngle:Float;
+	private var emitterMultiShoot:Float->Void;
 
 	// Variables for emitter paths
+	private var emitterPath:Float->Void;
 	private var originPos:FlxPoint;
 	private var pathWalkSpeed:Int;
 	private var pathPoints:Array<FlxPoint>;
 	private var currPathPoint:Int;
 	private var currPathAngle:Float;
+	private var isRelativeParticles:Bool;
 
 	public function new(X:Float, Y:Float, Size:Int)
 	{
@@ -53,8 +55,12 @@ class CustomEmitter extends FlxEmitter
 			emitBehavior(elapsed);
 		if (emitterPath != null)
 			emitterPath(elapsed);
+		if (isMultiShoot)
+			emitterMultiShoot(elapsed);
 		if (isSpinning)
 			emitterSpin(elapsed);
+
+		launchAngle.set(currEmitAngle - maxSpread, currEmitAngle + maxSpread);
 	}
 
 	/**
@@ -87,21 +93,35 @@ class CustomEmitter extends FlxEmitter
 				currEmitAngle += spinSpeed * elapsed;
 
 				if (currEmitAngle > 360)
-					currEmitAngle = 0;
-
-				launchAngle.set(currEmitAngle);
+					currEmitAngle = currEmitAngle % 360;
 			}
 		}
 
 		return this;
 	}
 
+	public function setMultiShoot(DirectionNumber:Int):CustomEmitter
+	{
+		if (type != null)
+		{
+			isMultiShoot = true;
+			multiShootAngle = 360 / DirectionNumber;
+			emitterMultiShoot = function(elapsed:Float)
+			{
+				currEmitAngle += multiShootAngle;
+
+				if (currEmitAngle > 360)
+					currEmitAngle = currEmitAngle % 360;
+			}
+		}
+		return this;
+	}
+
 	public function addStraightEmit(StartAngle:Float = 0, MaxSpread:Int = 0):CustomEmitter
 	{
 		type = EmitterType.STRAIGHT;
-		startAngle = StartAngle;
+		currEmitAngle = StartAngle;
 		maxSpread = MaxSpread;
-		launchAngle.set(startAngle - maxSpread, startAngle + maxSpread);
 		return this;
 	}
 
