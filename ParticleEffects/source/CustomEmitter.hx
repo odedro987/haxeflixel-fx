@@ -32,20 +32,20 @@ class CustomEmitter extends FlxEmitter
 	private var currPathAngle:Float;
 	private var isRelativeParticles:Bool;
 
-	public function new(X:Float, Y:Float, Size:Int)
+	public function new(x:Float, y:Float, size:Int)
 	{
-		super(X, Y, Size);
+		super(x, y, size);
 		originPos = FlxPoint.get();
-		originPos.set(X, Y);
+		originPos.set(x, y);
 		pathPoints = [];
 
 		// Temporary paritcles
 		makeParticles(4, 4);
 	}
 
-	public function emit(Frequency:Float = 0.1)
+	public function emit(frequency:Float = 0.1)
 	{
-		start(false, Frequency);
+		start(false, frequency);
 	}
 
 	override public function update(elapsed:Float)
@@ -68,6 +68,8 @@ class CustomEmitter extends FlxEmitter
 	{
 		emitBehavior = null;
 		emitterPath = null;
+		emitterMultiShoot = null;
+		emitterSpin = null;
 
 		FlxDestroyUtil.put(originPos);
 
@@ -82,16 +84,16 @@ class CustomEmitter extends FlxEmitter
 	/**
 	 * This function gives the emitter a constant spin.
 	 *
-	 * @param SpinSpeed 	How many degrees to spin every second.
+	 * @param spinSpeed 	How many degrees to spin every second.
 	 *						`360` means one full revolution per second.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function setEmitterSpin(SpinSpeed:Int):CustomEmitter
+	public function setEmitterSpin(spinSpeed:Int):CustomEmitter
 	{
 		if (type != null)
 		{
 			isSpinning = true;
-			spinSpeed = SpinSpeed;
+			this.spinSpeed = spinSpeed;
 			emitterSpin = function(elapsed:Float)
 			{
 				currEmitAngle += spinSpeed * elapsed;
@@ -107,19 +109,19 @@ class CustomEmitter extends FlxEmitter
 	/**
 	 * This function gives the illusion of shooting from different angles.
 	 * In reality each update tick it adds to the launch angle proportionatly
-	 * to the number of given directions. 
+	 * to the number of given directions.
 	 *
 	 * **NOTE:** Works nicer with high frequency emits and fast speeds.
 	 *
-	 * @param DirectionNumber 	How many directions should the emitter shoot from.
+	 * @param directionNumber 	How many directions should the emitter shoot from.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function setMultiShoot(DirectionNumber:Int):CustomEmitter
+	public function setMultiShoot(directionNumber:Int):CustomEmitter
 	{
 		if (type != null)
 		{
 			isMultiShoot = true;
-			multiShootAngle = 360 / DirectionNumber;
+			multiShootAngle = 360 / directionNumber;
 			emitterMultiShoot = function(elapsed:Float)
 			{
 				currEmitAngle += multiShootAngle;
@@ -132,23 +134,23 @@ class CustomEmitter extends FlxEmitter
 	}
 
 	/**
-	 * This function sets a basic emitter behavior. Emits at a straight line with an optional given `StartAngle` 
-	 * with an optional `MaxSpread`.
+	 * This function sets a basic emitter behavior. Emits at a straight line with an optional given `startAngle` 
+	 * with an optional `maxSpread`.
 	 *
-	 * @param StartAngle 	Starting angle for the emitter.
+	 * @param startAngle 	Starting angle for the emitter.
 	 * 						Default value is `0` = right.
 	 *						Can be paired with 
-	 * @param MaxSpread 	How far can the particles spread. 
-	 * 						Used evenly from `-MaxSpread` to `MaxSpread`.
+	 * @param maxSpread 	How far can the particles spread. 
+	 * 						Used evenly from `-maxSpread` to `maxSpread`.
 	 *						Default value sets at `0` for no spread.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	 * @see Types#EmitterAngle
 	**/
-	public function addStraightEmit(StartAngle:Float = 0, MaxSpread:Int = 0):CustomEmitter
+	public function addStraightEmit(startAngle:Float = 0, maxSpread:Int = 0):CustomEmitter
 	{
 		type = EmitterType.STRAIGHT;
-		currEmitAngle = StartAngle;
-		maxSpread = MaxSpread;
+		currEmitAngle = startAngle;
+		this.maxSpread = maxSpread;
 		emitBehavior = function(elapsed:Float)
 		{
 			launchAngle.set(currEmitAngle - maxSpread, currEmitAngle + maxSpread);
@@ -172,25 +174,25 @@ class CustomEmitter extends FlxEmitter
 	/**
 	 * This function sets a path made of an array of points for the emitter to loop through.
 	 *
-	 * @param Points 	Array of `FlxPoint` to loop through.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param points 	Array of `FlxPoint` to loop through.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
-	 * @param Type 		Used internally for differentiating.
+	 * @param type 		Used internally for differentiating.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	private function addPolygonPath(Points:Array<FlxPoint>, Speed:Int, Type:EmitterPath = EmitterPath.POLYGON):CustomEmitter
+	private function addPolygonPath(points:Array<FlxPoint>, speed:Int, type:EmitterPath = EmitterPath.POLYGON):CustomEmitter
 	{
-		pathType = Type;
+		pathType = type;
 		pathPoints.push(originPos);
-		for (point in Points)
+		for (point in points)
 		{
 			pathPoints.push(point);
 		}
 		currPathPoint = 0;
-		pathWalkSpeed = Speed;
+		pathWalkSpeed = speed;
 		emitterPath = function(elapsed:Float)
 		{
-			goToNextPoint(elapsed);
+			moveTowardsNextPoint(elapsed);
 		}
 		return this;
 	}
@@ -198,116 +200,115 @@ class CustomEmitter extends FlxEmitter
 	/**
 	 * This function sets a path made of an array of points for the emitter to loop through.
 	 *
-	 * @param Points 	Array of `FlxPoint` to loop through.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param points 	Array of `FlxPoint` to loop through.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function addPolygonalPath(Points:Array<FlxPoint>, Speed:Int):CustomEmitter
+	public function addPolygonalPath(points:Array<FlxPoint>, speed:Int):CustomEmitter
 	{
-		return addPolygonPath(Points, Speed);
+		return addPolygonPath(points, speed);
 	}
 
 	/**
 	 * This function sets a line path for the emitter to loop through.
 	 *
-	 * @param X 		Distance in the x-axis relative to emitter's position.
-	 * @param Y 		Distance in the y-axis relative to emitter's position.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param x 		Distance in the x-axis relative to emitter's position.
+	 * @param y 		Distance in the y-axis relative to emitter's position.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function addLinePath(X:Float, Y:Float, Speed:Int):CustomEmitter
+	public function addLinePath(x:Float, y:Float, speed:Int):CustomEmitter
 	{
-		return addPolygonPath([new FlxPoint(originPos.x + X, originPos.y + Y)], Speed, EmitterPath.LINE);
+		return addPolygonPath([FlxPoint.get(originPos.x + x, originPos.y + y)], speed, EmitterPath.LINE);
 	}
 
 	/**
 	 * This function sets a triangular path for the emitter to loop through.
 	 * Starts at the emitter's original position.
 	 *
-	 * @param PointB 	The 2nd point of the triangle. Coordinations are absolute, not relative. 
-	 * @param PointC 	The 3rd point of the triangle. Coordinations are absolute, not relative.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param pointB 	The 2nd point of the triangle. Coordinations are absolute, not relative. 
+	 * @param pointC 	The 3rd point of the triangle. Coordinations are absolute, not relative.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function addTrianglePath(PointB:FlxPoint, PointC:FlxPoint, Speed:Int):CustomEmitter
+	public function addTrianglePath(pointB:FlxPoint, pointC:FlxPoint, speed:Int):CustomEmitter
 	{
-		return addPolygonPath([PointB, PointC], Speed, EmitterPath.TRIANGLE);
+		return addPolygonPath([pointB, pointC], speed, EmitterPath.TRIANGLE);
 	}
 
 	/**
 	 * This function sets a rectangular path for the emitter to loop through.
 	 *
-	 * @param Width 	Distance in the x-axis relative to emitter's position.
-	 * @param Height 	Distance in the y-axis relative to emitter's position.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param width 	Distance in the x-axis relative to emitter's position.
+	 * @param height 	Distance in the y-axis relative to emitter's position.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
-	 * @param Type 		Used internally for differentiating.
+	 * @param type 		Used internally for differentiating.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	private function addRectanglePath(Width:Float, Height:Float, Speed:Int, Type:EmitterPath = EmitterPath.RECTANGLE):CustomEmitter
+	private function addRectanglePath(width:Float, height:Float, speed:Int, type:EmitterPath = EmitterPath.RECTANGLE):CustomEmitter
 	{
 		return addPolygonPath([
-			new FlxPoint(originPos.x + Width, originPos.y),
-			new FlxPoint(originPos.x + Width, originPos.y + Height),
-			new FlxPoint(originPos.x, originPos.y + Height)
-		], Speed, Type);
+			FlxPoint.get(originPos.x + width, originPos.y),
+			FlxPoint.get(originPos.x + width, originPos.y + height),
+			FlxPoint.get(originPos.x, originPos.y + height)
+		], speed, type);
 	}
 
 	/**
 	 * This function sets a rectangular path for the emitter to loop through.
 	 *
-	 * @param Width 	Distance in the x-axis relative to emitter's position.
-	 * @param Height 	Distance in the y-axis relative to emitter's position.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param width 	Distance in the x-axis relative to emitter's position.
+	 * @param height 	Distance in the y-axis relative to emitter's position.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function addRectangularPath(Width:Float, Height:Float, Speed:Int):CustomEmitter
+	public function addRectangularPath(width:Float, height:Float, speed:Int):CustomEmitter
 	{
-		return addRectanglePath(Width, Height, Speed);
+		return addRectanglePath(width, height, speed);
 	}
 
 	/**
 	 * This function sets a square path for the emitter to loop through.
 	 *
-	 * @param Length 	Distance in the x-axis and y-axis relative to emitter's position.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param length 	Distance in the x-axis and y-axis relative to emitter's position.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function addSquarePath(Length:Float, Speed:Int):CustomEmitter
+	public function addSquarePath(length:Float, speed:Int):CustomEmitter
 	{
-		return addRectanglePath(Length, Length, Speed, EmitterPath.SQUARE);
+		return addRectanglePath(length, length, speed, EmitterPath.SQUARE);
 	}
 
 	/**
 	 * This function sets a elliptical path for the emitter to loop through.
 	 * The ellipse is relative to the emitter's original position.
 	 *
-	 * @param Width 	Radius of the major axis.
-	 * @param Height 	Radius of the minor axis.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param width 	Radius of the major axis.
+	 * @param height 	Radius of the minor axis.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
-	 * @param Type 		Used internally for differentiating.
+	 * @param type 		Used internally for differentiating.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	private function addEllipsePath(Width:Float, Height:Float, Speed:Int, Type:EmitterPath = EmitterPath.ELLIPSE):CustomEmitter
+	private function addEllipsePath(width:Float, height:Float, speed:Int, type:EmitterPath = EmitterPath.ELLIPSE):CustomEmitter
 	{
-		pathType = Type;
-		var center = FlxPoint.get();
-		center.set(originPos.x + Width, originPos.y);
+		pathType = type;
+		var center = FlxPoint.get(originPos.x + width, originPos.y);
 		currPathAngle = 0;
 		emitterPath = function(elapsed:Float)
 		{
-			currPathAngle += elapsed * Speed;
+			currPathAngle += elapsed * speed;
 			if (currPathAngle > 360)
 				currPathAngle = 0;
 
-			var newX = (center.x + Math.cos(currPathAngle) * Width) - x;
-			var newY = (center.y + Math.sin(currPathAngle) * Height) - y;
+			var newX = (center.x + Math.cos(currPathAngle) * width) - x;
+			var newY = (center.y + Math.sin(currPathAngle) * height) - y;
 			x += newX;
 			y += newY;
 
@@ -323,35 +324,42 @@ class CustomEmitter extends FlxEmitter
 	 * This function sets a elliptical path for the emitter to loop through.
 	 * The ellipse is relative to the emitter's original position.
 	 *
-	 * @param Width 	Radius of the major axis.
-	 * @param Height 	Radius of the minor axis.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param width 	Radius of the major axis.
+	 * @param height 	Radius of the minor axis.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function addEllipticalPath(Radius:Int, Speed:Int):CustomEmitter
+	public function addEllipticalPath(width:Float, height:Float, speed:Int):CustomEmitter
 	{
-		return addEllipsePath(Radius, Radius, Speed, EmitterPath.ELLIPSE);
+		return addEllipsePath(width, height, speed, EmitterPath.ELLIPSE);
 	}
 
 	/**
 	 * This function sets a circular path for the emitter to loop through.
 	 * The circle is relative to the emitter's original position.
 	 *
-	 * @param Radius 	Radius of circle.
-	 * @param Speed 	How fast should the emitter go through the path.
+	 * @param radius 	Radius of circle.
+	 * @param speed 	How fast should the emitter go through the path.
 	 *					Proportional to `update` funciton's 'elapsed`.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	**/
-	public function addCirclePath(Radius:Int, Speed:Int):CustomEmitter
+	public function addCirclePath(radius:Int, speed:Int):CustomEmitter
 	{
-		return addEllipsePath(Radius, Radius, Speed, EmitterPath.CIRCLE);
+		return addEllipsePath(radius, radius, speed, EmitterPath.CIRCLE);
 	}
 
-	/**	
-	 * Helper functions
+	//-- Helper functions --//
+
+	/**
+	 * This function moves the emitter towards the next point in `pathPoints`.
+	 * If `isRelativeParticles` set to `true` the function will move the particles as well.
+	 *
+	 * This function only affects paths that use `pathPoints` (i.e ploygonal paths).
+	 * @param elapsed Delta of `update` function.
+	 * @see addPolygonalPath
 	**/
-	private function goToNextPoint(elapsed:Float)
+	private function moveTowardsNextPoint(elapsed:Float)
 	{
 		var nextPoint = currPathPoint < pathPoints.length - 1 ? currPathPoint + 1 : 0;
 		var dx = pathPoints[nextPoint].x - pathPoints[currPathPoint].x;
@@ -373,26 +381,30 @@ class CustomEmitter extends FlxEmitter
 		}
 	}
 
-	private function moveParticles(X:Float, Y:Float)
+	/**
+	 * This function loops through all living particles and moves them by given amounts.
+	 * Used for moving particles relative to the emitter's position.
+	 *
+	 * @param x The amount of pixels to move in the x-axis.
+	 * @param y The amount of pixels to move in the y-axis.
+	**/
+	private function moveParticles(x:Float, y:Float)
 	{
 		forEachAlive(function(particle:FlxParticle)
 		{
-			particle.x += X;
-			particle.y += Y;
+			particle.x += x;
+			particle.y += y;
 		});
 	}
 
-	private function getDir(Start:Float, End:Float):Int
+	/**
+	 * This function calculates the distance from the emitter's current postion to an FlxPoint.
+	 *
+	 * @param destination The `FlxPoint` to calculate the distance from.
+	 * @return The distance from the emitter's current position.
+	**/
+	private function distanceTo(destination:FlxPoint):Float
 	{
-		if (Start < End)
-			return 1;
-		if (Start == End)
-			return 0;
-		return -1;
-	}
-
-	private function distanceTo(Destination:FlxPoint):Float
-	{
-		return Math.sqrt(Math.pow((x - Destination.x), 2) + Math.pow((y - Destination.y), 2));
+		return Math.sqrt(Math.pow((x - destination.x), 2) + Math.pow((y - destination.y), 2));
 	}
 }
