@@ -192,7 +192,7 @@ class CustomEmitter extends FlxEmitter
 		pathWalkSpeed = speed;
 		emitterPath = function(elapsed:Float)
 		{
-			goToNextPoint(elapsed);
+			moveTowardsNextPoint(elapsed);
 		}
 		return this;
 	}
@@ -349,10 +349,17 @@ class CustomEmitter extends FlxEmitter
 		return addEllipsePath(radius, radius, speed, EmitterPath.CIRCLE);
 	}
 
-	/**	
-	 * Helper functions
+	//-- Helper functions --//
+
+	/**
+	 * This function moves the emitter towards the next point in `pathPoints`.
+	 * If `isRelativeParticles` set to `true` the function will move the particles as well.
+	 *
+	 * This function only affects paths that use `pathPoints` (i.e ploygonal paths).
+	 * @param elapsed Delta of `update` function.
+	 * @see addPolygonalPath
 	**/
-	private function goToNextPoint(elapsed:Float)
+	private function moveTowardsNextPoint(elapsed:Float)
 	{
 		var nextPoint = currPathPoint < pathPoints.length - 1 ? currPathPoint + 1 : 0;
 		var dx = pathPoints[nextPoint].x - pathPoints[currPathPoint].x;
@@ -374,6 +381,13 @@ class CustomEmitter extends FlxEmitter
 		}
 	}
 
+	/**
+	 * This function loops through all living particles and moves them by given amounts.
+	 * Used for moving particles relative to the emitter's position.
+	 *
+	 * @param x The amount of pixels to move in the x-axis.
+	 * @param y The amount of pixels to move in the y-axis.
+	**/
 	private function moveParticles(x:Float, y:Float)
 	{
 		forEachAlive(function(particle:FlxParticle)
@@ -383,15 +397,12 @@ class CustomEmitter extends FlxEmitter
 		});
 	}
 
-	private function getDir(start:Float, end:Float):Int
-	{
-		if (start < end)
-			return 1;
-		if (start == end)
-			return 0;
-		return -1;
-	}
-
+	/**
+	 * This function calculates the distance from the emitter's current postion to an FlxPoint.
+	 *
+	 * @param destination The `FlxPoint` to calculate the distance from.
+	 * @return The distance from the emitter's current position.
+	**/
 	private function distanceTo(destination:FlxPoint):Float
 	{
 		return Math.sqrt(Math.pow((x - destination.x), 2) + Math.pow((y - destination.y), 2));
