@@ -5,6 +5,7 @@ import Types.EmitterType;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.math.FlxPoint;
+import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 
 class CustomEmitter extends FlxEmitter
@@ -32,25 +33,38 @@ class CustomEmitter extends FlxEmitter
 	private var currPathAngle:Float;
 	private var isRelativeParticles:Bool;
 
-	public function new(x:Float, y:Float, size:Int)
+	/**
+	 * Creates a new `CustomEmitter` object at a specific position.
+	 *
+	 * @param   X      		  The X position of the emitter.
+	 * @param   Y      		  The Y position of the emitter.
+	 * @param   Size   		  Specifies a maximum capacity for this emitter.
+	 * @param   InitialColor  The particle color, default set to white.
+	 */
+	public function new(X:Float, Y:Float, Size:Int, InitialColor:FlxColor = FlxColor.WHITE)
 	{
-		super(x, y, size);
+		super(X, Y, Size);
 		originPos = FlxPoint.get();
-		originPos.set(x, y);
+		originPos.set(X, Y);
 		pathPoints = [];
 
 		// Temporary paritcles
-		makeParticles(4, 4);
+		makeParticles(4, 4, InitialColor, Size);
 	}
 
-	public function emit(frequency:Float = 0.1)
+	/**
+		* Starts continuously emitting particles with a given frequency. 
+		*
+		* @param   Frequency   `Frequency` is how often to emit a particle.
+		`0` = never emit, `0.1` = 1 particle every 0.1 seconds, `5` = 1 particle every 5 seconds.
+	 */
+	public function emit(Frequency:Float = 0.1)
 	{
-		start(false, frequency);
+		start(false, Frequency);
 	}
 
 	override public function update(elapsed:Float)
 	{
-		super.update(elapsed);
 		if (isMultiShoot)
 			emitterMultiShoot(elapsed);
 		if (isSpinning)
@@ -59,6 +73,7 @@ class CustomEmitter extends FlxEmitter
 			emitBehavior(elapsed);
 		if (emitterPath != null)
 			emitterPath(elapsed);
+		super.update(elapsed);
 	}
 
 	/**
@@ -77,6 +92,112 @@ class CustomEmitter extends FlxEmitter
 		{
 			FlxDestroyUtil.put(point);
 		}
+	}
+
+	/**
+		* Handy function to set the the beginning and ending range of values for an emitter's lifespan color in one line.
+		*
+		* @param   start  The minimum value of this lifespan for particles launched from this emitter.
+		* @param   end    The maximum value of this lifespan for particles launched from this emitter. 
+		Optional, will be set to equal `start` if ignored.
+		* @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setLifespanRange(start:Float, ?end:Float):CustomEmitter
+	{
+		end = end == null ? start : end;
+		this.lifespan.set(start, end);
+		return this;
+	}
+
+	/**
+		* Handy function to set the the beginning and ending range of values for an emitter's particles color in one line.
+		*
+		* @param   start  The minimum value of this color for particles launched from this emitter.
+		* @param   end    The maximum value of this color for particles launched from this emitter. 
+		Optional, will be set to equal `start` if ignored.
+		* @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setColorRange(start:FlxColor, ?end:FlxColor):CustomEmitter
+	{
+		end = end == null ? start : end;
+		this.color.set(start, start, end, end);
+		return this;
+	}
+
+	/**
+	 * Handy function to set the the beginning and ending range of values for an emitter's particles color in one line.
+	 *
+	 * @param   startMin  The minimum possible initial value of this color for particles launched from this emitter.
+	 * @param   startMax  The maximum possible initial value of this color for particles launched from this emitter.
+	 * @param   endMin    The minimum possible final value of this color for particles launched from this emitter.
+	 * @param   endMax    The maximum possible final value of this color for particles launched from this emitter.
+	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setColorRangeBounds(startMin:FlxColor, startMax:FlxColor, endMin:FlxColor, endMax:FlxColor):CustomEmitter
+	{
+		this.color.set(startMin, startMax, endMin, endMax);
+		return this;
+	}
+
+	/**
+		* Handy function to set the the beginning and ending range of values for an emitter's particles size in one line.
+		*
+		* @param   start  The minimum value of this size for particles launched from this emitter.
+		* @param   end    The maximum value of this size for particles launched from this emitter. 
+		Optional, will be set to equal `start` if ignored.
+		* @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setSizeRange(start:Float, ?end:Float):CustomEmitter
+	{
+		end = end == null ? start : end;
+		this.scale.set(start, start, start, start, end, end, end, end);
+		return this;
+	}
+
+	/**
+	 * Handy function to set the the beginning and ending range of values for an emitter's particles size in one line.
+	 *
+	 * @param   startMin  The minimum possible initial value of this size for particles launched from this emitter.
+	 * @param   startMax  The maximum possible initial value of this size for particles launched from this emitter.
+	 * @param   endMin    The minimum possible final value of this size for particles launched from this emitter.
+	 * @param   endMax    The maximum possible final value of this size for particles launched from this emitter.
+	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setSizeRangeBounds(startMin:Float, startMax:Float, endMin:Float, endMax:Float):CustomEmitter
+	{
+		this.scale.set(startMin, startMin, startMax, startMax, endMin, endMin, endMax, endMax);
+		return this;
+	}
+
+	/**
+		* Handy function to set the the beginning and ending range of values for an emitter's particles speed in one line.
+		*
+		* @param   start  The minimum value of this speed for particles launched from this emitter.
+		* @param   end    The maximum value of this speed for particles launched from this emitter. 
+		Optional, will be set to equal `start` if ignored.
+		* @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setSpeedRange(start:Float, ?end:Float):CustomEmitter
+	{
+		end = end == null ? start : end;
+		trace(end);
+		this.speed.set(start, start, end, end);
+		return this;
+	}
+
+	/**
+	 * Handy function to set the the beginning and ending range of values for an emitter's particles speed in one line.
+	 *
+	 * @param   startMin  The minimum possible initial value of this speed for particles launched from this emitter.
+	 * @param   startMax  The maximum possible initial value of this speed for particles launched from this emitter.
+	 * @param   endMin    The minimum possible final value of this speed for particles launched from this emitter.
+	 * @param   endMax    The maximum possible final value of this speed for particles launched from this emitter.
+	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setSpeedRangeBounds(startMin:Float, startMax:Float, endMin:Float, endMax:Float):CustomEmitter
+	{
+		this.speed.set(startMin, startMax, endMin, endMax);
+		return this;
 	}
 
 	//-- Builder functions for adding emitting behaviors --//
