@@ -95,6 +95,20 @@ class CustomEmitter extends FlxEmitter
 	}
 
 	/**
+	 * Sets the emitter size. Particles can be randomly generated from anywhere within this box.
+	 *
+	 * @param   Width  The width of this emitter.
+	 * @param   Height The height of this emitter. Optional, will be set to `Width` if ignored.
+	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setEmitterSize(Width:Float, ?Height:Float):CustomEmitter
+	{
+		this.width = Width;
+		this.height = Height == null ? Width : Height;
+		return this;
+	}
+
+	/**
 		* Handy function to set the the beginning and ending range of values for an emitter's lifespan color in one line.
 		*
 		* @param   start  The minimum value of this lifespan for particles launched from this emitter.
