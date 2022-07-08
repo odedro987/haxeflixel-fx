@@ -2,7 +2,7 @@ package oded.flixel.utils.emitter;
 
 import flixel.FlxG;
 import flixel.util.FlxColor;
-import oded.flixelutils.emitter.Types;
+import oded.flixel.utils.emitter.Types;
 
 class EmitterLibrary
 {
