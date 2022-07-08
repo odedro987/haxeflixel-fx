@@ -1,3 +1,5 @@
+package oded.flixel.utils.emitter;
+
 @:enum
 abstract EmitAngle(Float) from Float to Float
 {

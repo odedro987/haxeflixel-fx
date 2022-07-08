@@ -1,8 +1,8 @@
-package;
+package oded.flixel.utils.emitter;
 
-import Types.EmitAngle;
 import flixel.FlxG;
 import flixel.util.FlxColor;
+import oded.flixelutils.emitter.Types;
 
 class EmitterLibrary
 {

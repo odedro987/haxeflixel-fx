@@ -1,12 +1,11 @@
-package;
+package oded.flixel.utils.emitter;
 
-import Types.EmitterPath;
-import Types.EmitterType;
 import flixel.effects.particles.FlxEmitter;
 import flixel.effects.particles.FlxParticle;
 import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
+import oded.flixel.utils.emitter.Types;
 
 class CustomEmitter extends FlxEmitter
 {
