@@ -199,6 +199,36 @@ class CustomEmitter extends FlxEmitter
 	}
 
 	/**
+		* Handy function to set the the beginning and ending range of values for an emitter's particles angular velocity in one line.
+		*
+		* @param   start  The minimum value of this angular velocity for particles launched from this emitter.
+		* @param   end    The maximum value of this angular velocity for particles launched from this emitter. 
+		Optional, will be set to equal `start` if ignored.
+		* @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setAngularVelocityRange(start:Float, ?end:Float):CustomEmitter
+	{
+		end = end == null ? start : end;
+		this.angularVelocity.set(start, start, end, end);
+		return this;
+	}
+
+	/**
+	 * Handy function to set the the beginning and ending range of values for an emitter's particles angular velocity in one line.
+	 *
+	 * @param   startMin  The minimum possible initial value of this angular velocity for particles launched from this emitter.
+	 * @param   startMax  The maximum possible initial value of this angular velocity for particles launched from this emitter.
+	 * @param   endMin    The minimum possible final value of this angular velocity for particles launched from this emitter.
+	 * @param   endMax    The maximum possible final value of this angular velocity for particles launched from this emitter.
+	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setAngularVelocityRangeBounds(startMin:Float, startMax:Float, endMin:Float, endMax:Float):CustomEmitter
+	{
+		this.angularVelocity.set(startMin, startMax, endMin, endMax);
+		return this;
+	}
+
+	/**
 		* Handy function to set the the beginning and ending range of values for an emitter's particles speed in one line.
 		*
 		* @param   start  The minimum value of this speed for particles launched from this emitter.
