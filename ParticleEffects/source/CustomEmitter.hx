@@ -109,7 +109,7 @@ class CustomEmitter extends FlxEmitter
 	}
 
 	/**
-		* Handy function to set the the beginning and ending range of values for an emitter's lifespan color in one line.
+		* Handy function to set the the beginning and ending range of values for an emitter's particles lifespan in one line.
 		*
 		* @param   start  The minimum value of this lifespan for particles launched from this emitter.
 		* @param   end    The maximum value of this lifespan for particles launched from this emitter. 
@@ -120,6 +120,21 @@ class CustomEmitter extends FlxEmitter
 	{
 		end = end == null ? start : end;
 		this.lifespan.set(start, end);
+		return this;
+	}
+
+	/**
+		* Handy function to set the the beginning and ending range of values for an emitter's alpha in one line.
+		*
+		* @param   start  The minimum value of this alpha for particles launched from this emitter.
+		* @param   end    The maximum value of this alpha for particles launched from this emitter. 
+		Optional, will be set to equal `start` if ignored.
+		* @return  This `CustomEmitter` instance (nice for chaining stuff together).
+	 */
+	public function setAlphaRange(start:Float, ?end:Float):CustomEmitter
+	{
+		end = end == null ? start : end;
+		this.alpha.set(start, end);
 		return this;
 	}
 
