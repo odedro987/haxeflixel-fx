@@ -36,30 +36,30 @@ class CustomEmitter extends FlxEmitter
 	 * Creates a new `CustomEmitter` object at a specific position.
 	 *
 	 * @param   X      		  The X position of the emitter.
-	 * @param   Y      		  The Y position of the emitter.
-	 * @param   Size   		  Specifies a maximum capacity for this emitter.
-	 * @param   InitialColor  The particle color, default set to white.
+	 * @param   y      		  The Y position of the emitter.
+	 * @param   size   		  Specifies a maximum capacity for this emitter.
+	 * @param   initialColor  The particle color, default set to white.
 	 */
-	public function new(X:Float, Y:Float, Size:Int, InitialColor:FlxColor = FlxColor.WHITE)
+	public function new(x:Float, y:Float, size:Int, initialColor:FlxColor = FlxColor.WHITE)
 	{
-		super(X, Y, Size);
+		super(x, y, size);
 		originPos = FlxPoint.get();
-		originPos.set(X, Y);
+		originPos.set(x, y);
 		pathPoints = [];
 
 		// Temporary paritcles
-		makeParticles(4, 4, InitialColor, Size);
+		makeParticles(4, 4, initialColor, size);
 	}
 
 	/**
 		* Starts continuously emitting particles with a given frequency. 
 		*
-		* @param   Frequency   `Frequency` is how often to emit a particle.
+		* @param   frequency   `frequency` is how often to emit a particle.
 		`0` = never emit, `0.1` = 1 particle every 0.1 seconds, `5` = 1 particle every 5 seconds.
 	 */
-	public function emit(Frequency:Float = 0.1)
+	public function emit(frequency:Float = 0.1)
 	{
-		start(false, Frequency);
+		start(false, frequency);
 	}
 
 	override public function update(elapsed:Float)
@@ -96,14 +96,14 @@ class CustomEmitter extends FlxEmitter
 	/**
 	 * Sets the emitter size. Particles can be randomly generated from anywhere within this box.
 	 *
-	 * @param   Width  The width of this emitter.
-	 * @param   Height The height of this emitter. Optional, will be set to `Width` if ignored.
+	 * @param   width  The width of this emitter.
+	 * @param   height The height of this emitter. Optional, will be set to `width` if ignored.
 	 * @return  This `CustomEmitter` instance (nice for chaining stuff together).
 	 */
-	public function setEmitterSize(Width:Float, ?Height:Float):CustomEmitter
+	public function setEmitterSize(width:Float, ?height:Float):CustomEmitter
 	{
-		this.width = Width;
-		this.height = Height == null ? Width : Height;
+		this.width = width;
+		this.height = height == null ? width : height;
 		return this;
 	}
 
