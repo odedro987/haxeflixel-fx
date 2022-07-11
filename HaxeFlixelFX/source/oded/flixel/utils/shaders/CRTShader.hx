@@ -1,10 +1,23 @@
 package oded.flixel.utils.shaders;
 
+import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxShader;
-import openfl.display.ShaderParameter;
+import oded.flixel.utils.shaders.Types.CRTOptions;
 
 class CRTShader extends FlxShader
 {
+	private var _defaultOptions:CRTOptions = {
+		showHorizontalLines: true,
+		showVerticalLines: true,
+		showVignette: true,
+		showCurvature: true,
+		curvature: new FlxPoint(3, 3),
+		vignetteOpacity: 1.0,
+		scanLineOpacity: 1.0,
+		vignetteRoundness: 8.0,
+		brightness: 1.2
+	}
+
 	@:glFragmentSource('
 		#pragma header
 		
@@ -77,9 +90,11 @@ class CRTShader extends FlxShader
 				gl_FragColor *= vec4(vec3(brightness), 1.0);
 			}
 		}')
-	public function new(opts:Types.CRTOptions)
+	public function new(?opts:Types.CRTOptions)
 	{
 		super();
+		if (opts == null)
+			opts = _defaultOptions;
 		this.showHorizontalLines.value = [opts.showHorizontalLines != null ? opts.showHorizontalLines : true];
 		this.showVerticalLines.value = [opts.showVerticalLines != null ? opts.showVerticalLines : true];
 		this.showVignette.value = [opts.showVignette != null ? opts.showVignette : true];

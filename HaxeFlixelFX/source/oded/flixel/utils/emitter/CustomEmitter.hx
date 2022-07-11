@@ -35,7 +35,7 @@ class CustomEmitter extends FlxEmitter
 	/**
 	 * Creates a new `CustomEmitter` object at a specific position.
 	 *
-	 * @param   X      		  The X position of the emitter.
+	 * @param   x      		  The X position of the emitter.
 	 * @param   y      		  The Y position of the emitter.
 	 * @param   size   		  Specifies a maximum capacity for this emitter.
 	 * @param   initialColor  The particle color, default set to white.
