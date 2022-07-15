@@ -9,28 +9,99 @@ import oded.flixel.utils.emitter.Types;
 
 class CustomEmitter extends FlxEmitter
 {
-	private var type:EmitterType;
-	private var pathType:EmitterPath;
+	/**
+	 *	The type of the emitter.
+	**/
+	private var _type:EmitterType;
+
+	/**
+	 *	The type of the emitter's path.
+	**/
+	private var _pathType:EmitterPath;
 
 	// Variables for emitting behaviors
-	private var emitBehavior:Float->Void;
-	private var maxSpread:Int;
-	private var spinSpeed:Int;
-	private var currEmitAngle:Float;
-	private var isSpinning:Bool;
-	private var emitterSpin:Float->Void;
-	private var isMultiShoot:Bool;
-	private var multiShootAngle:Float;
-	private var emitterMultiShoot:Float->Void;
+
+	/**
+	 *	Describes the emit behavior, takes `elapsed` as argument.
+	**/
+	private var _emitBehavior:(elapsed:Float) -> Void;
+
+	/**
+	 * The maximal spread for straight emit, in pixels. Range is `[-_maxSpread, _maxSpread]`.
+	**/
+	private var _maxSpread:Int;
+
+	/**
+	 *	The speed of the emitter's rotation, in degrees. `360` means one full rotation.
+	**/
+	private var _spinSpeed:Int;
+
+	/**
+	 *	The current angle of the emitter.
+	**/
+	private var _currEmitAngle:Float;
+
+	/**
+	 *	Whether the emitter is spinning.
+	**/
+	private var _isSpinning:Bool;
+
+	/**
+	 *	Describes the emit spin behavior, takes `elapsed` as argument.
+	**/
+	private var _emitterSpin:(elapsed:Float) -> Void;
+
+	/**
+	 *	Whether the emitter is emitting from multiple angles.
+	**/
+	private var _isMultiShoot:Bool;
+
+	/**
+	 *	The angle of the multishoot.
+	**/
+	private var _multiShootAngle:Float;
+
+	/**
+	 *	Describes the emit multishoot behavior, takes `elapsed` as argument.
+	**/
+	private var _emitterMultiShoot:(elapsed:Float) -> Void;
 
 	// Variables for emitter paths
-	private var emitterPath:Float->Void;
-	private var originPos:FlxPoint;
-	private var pathWalkSpeed:Int;
-	private var pathPoints:Array<FlxPoint>;
-	private var currPathPoint:Int;
-	private var currPathAngle:Float;
-	private var isRelativeParticles:Bool;
+
+	/**
+	 *	Describes the emit path behavior, takes `elapsed` as argument.
+	**/
+	private var _emitterPath:(elapsed:Float) -> Void;
+
+	/**
+	 *	The origin position of the emitter.
+	**/
+	private var _originPos:FlxPoint;
+
+	/**
+	 *	The moving speed along the path.
+	**/
+	private var _pathWalkSpeed:Int;
+
+	/**
+	 *	An array of points for the path to transition between.
+	**/
+	private var _pathPoints:Array<FlxPoint>;
+
+	/**
+	 *	The index of the current point in the path.
+	**/
+	private var _currPathPoint:Int;
+
+	/**
+	 *	The current path angle. Used for Circular and Elliptic paths.
+	**/
+	private var _currPathAngle:Float;
+
+	/**
+	 *	Whether the particles position is relative to the emitter.
+	**/
+	private var _isRelativeParticles:Bool;
 
 	/**
 	 * Creates a new `CustomEmitter` object at a specific position.
@@ -43,9 +114,9 @@ class CustomEmitter extends FlxEmitter
 	public function new(x:Float, y:Float, size:Int, initialColor:FlxColor = FlxColor.WHITE)
 	{
 		super(x, y, size);
-		originPos = FlxPoint.get();
-		originPos.set(x, y);
-		pathPoints = [];
+		_originPos = FlxPoint.get();
+		_originPos.set(x, y);
+		_pathPoints = [];
 
 		// Temporary paritcles
 		makeParticles(4, 4, initialColor, size);
@@ -64,14 +135,14 @@ class CustomEmitter extends FlxEmitter
 
 	override public function update(elapsed:Float)
 	{
-		if (isMultiShoot)
-			emitterMultiShoot(elapsed);
-		if (isSpinning)
-			emitterSpin(elapsed);
-		if (emitBehavior != null)
-			emitBehavior(elapsed);
-		if (emitterPath != null)
-			emitterPath(elapsed);
+		if (_isMultiShoot)
+			_emitterMultiShoot(elapsed);
+		if (_isSpinning)
+			_emitterSpin(elapsed);
+		if (_emitBehavior != null)
+			_emitBehavior(elapsed);
+		if (_emitterPath != null)
+			_emitterPath(elapsed);
 		super.update(elapsed);
 	}
 
@@ -80,14 +151,14 @@ class CustomEmitter extends FlxEmitter
 	 */
 	override public function destroy():Void
 	{
-		emitBehavior = null;
-		emitterPath = null;
-		emitterMultiShoot = null;
-		emitterSpin = null;
+		_emitBehavior = null;
+		_emitterPath = null;
+		_emitterMultiShoot = null;
+		_emitterSpin = null;
 
-		FlxDestroyUtil.put(originPos);
+		FlxDestroyUtil.put(_originPos);
 
-		for (point in pathPoints)
+		for (point in _pathPoints)
 		{
 			FlxDestroyUtil.put(point);
 		}
@@ -269,16 +340,16 @@ class CustomEmitter extends FlxEmitter
 	**/
 	public function setEmitterSpin(spinSpeed:Int):CustomEmitter
 	{
-		if (type != null)
+		if (_type != null)
 		{
-			isSpinning = true;
-			this.spinSpeed = spinSpeed;
-			emitterSpin = function(elapsed:Float)
+			_isSpinning = true;
+			this._spinSpeed = spinSpeed;
+			_emitterSpin = function(elapsed:Float)
 			{
-				currEmitAngle += spinSpeed * elapsed;
+				_currEmitAngle += _spinSpeed * elapsed;
 
-				if (currEmitAngle > 360)
-					currEmitAngle = currEmitAngle % 360;
+				if (_currEmitAngle > 360)
+					_currEmitAngle = _currEmitAngle % 360;
 			}
 		}
 
@@ -297,16 +368,16 @@ class CustomEmitter extends FlxEmitter
 	**/
 	public function setMultiShoot(directionNumber:Int):CustomEmitter
 	{
-		if (type != null)
+		if (_type != null)
 		{
-			isMultiShoot = true;
-			multiShootAngle = 360 / directionNumber;
-			emitterMultiShoot = function(elapsed:Float)
+			_isMultiShoot = true;
+			_multiShootAngle = 360 / directionNumber;
+			_emitterMultiShoot = function(elapsed:Float)
 			{
-				currEmitAngle += multiShootAngle;
+				_currEmitAngle += _multiShootAngle;
 
-				if (currEmitAngle > 360)
-					currEmitAngle = currEmitAngle % 360;
+				if (_currEmitAngle > 360)
+					_currEmitAngle = _currEmitAngle % 360;
 			}
 		}
 		return this;
@@ -327,12 +398,12 @@ class CustomEmitter extends FlxEmitter
 	**/
 	public function addStraightEmit(startAngle:Float = 0, maxSpread:Int = 0):CustomEmitter
 	{
-		type = EmitterType.STRAIGHT;
-		currEmitAngle = startAngle;
-		this.maxSpread = maxSpread;
-		emitBehavior = function(elapsed:Float)
+		_type = EmitterType.STRAIGHT;
+		_currEmitAngle = startAngle;
+		this._maxSpread = maxSpread;
+		_emitBehavior = function(elapsed:Float)
 		{
-			launchAngle.set(currEmitAngle - maxSpread, currEmitAngle + maxSpread);
+			launchAngle.set(_currEmitAngle - _maxSpread, _currEmitAngle + _maxSpread);
 		}
 		return this;
 	}
@@ -346,7 +417,7 @@ class CustomEmitter extends FlxEmitter
 	**/
 	public function setRelativeParticles():CustomEmitter
 	{
-		isRelativeParticles = true;
+		_isRelativeParticles = true;
 		return this;
 	}
 
@@ -361,15 +432,15 @@ class CustomEmitter extends FlxEmitter
 	**/
 	private function addPolygonPath(points:Array<FlxPoint>, speed:Int, type:EmitterPath = EmitterPath.POLYGON):CustomEmitter
 	{
-		pathType = type;
-		pathPoints.push(originPos);
+		_pathType = type;
+		_pathPoints.push(_originPos);
 		for (point in points)
 		{
-			pathPoints.push(point);
+			_pathPoints.push(point);
 		}
-		currPathPoint = 0;
-		pathWalkSpeed = speed;
-		emitterPath = function(elapsed:Float)
+		_currPathPoint = 0;
+		_pathWalkSpeed = speed;
+		_emitterPath = function(elapsed:Float)
 		{
 			moveTowardsNextPoint(elapsed);
 		}
@@ -400,7 +471,7 @@ class CustomEmitter extends FlxEmitter
 	**/
 	public function addLinePath(x:Float, y:Float, speed:Int):CustomEmitter
 	{
-		return addPolygonPath([FlxPoint.get(originPos.x + x, originPos.y + y)], speed, EmitterPath.LINE);
+		return addPolygonPath([FlxPoint.get(_originPos.x + x, _originPos.y + y)], speed, EmitterPath.LINE);
 	}
 
 	/**
@@ -431,9 +502,9 @@ class CustomEmitter extends FlxEmitter
 	private function addRectanglePath(width:Float, height:Float, speed:Int, type:EmitterPath = EmitterPath.RECTANGLE):CustomEmitter
 	{
 		return addPolygonPath([
-			FlxPoint.get(originPos.x + width, originPos.y),
-			FlxPoint.get(originPos.x + width, originPos.y + height),
-			FlxPoint.get(originPos.x, originPos.y + height)
+			FlxPoint.get(_originPos.x + width, _originPos.y),
+			FlxPoint.get(_originPos.x + width, _originPos.y + height),
+			FlxPoint.get(_originPos.x, _originPos.y + height)
 		], speed, type);
 	}
 
@@ -477,21 +548,21 @@ class CustomEmitter extends FlxEmitter
 	**/
 	private function addEllipsePath(width:Float, height:Float, speed:Int, type:EmitterPath = EmitterPath.ELLIPSE):CustomEmitter
 	{
-		pathType = type;
-		var center = FlxPoint.get(originPos.x + width, originPos.y);
-		currPathAngle = 0;
-		emitterPath = function(elapsed:Float)
+		_pathType = type;
+		var center = FlxPoint.get(_originPos.x + width, _originPos.y);
+		_currPathAngle = 0;
+		_emitterPath = function(elapsed:Float)
 		{
-			currPathAngle += elapsed * speed;
-			if (currPathAngle > 360)
-				currPathAngle = 0;
+			_currPathAngle += elapsed * speed;
+			if (_currPathAngle > 360)
+				_currPathAngle = 0;
 
-			var newX = (center.x + Math.cos(currPathAngle) * width) - x;
-			var newY = (center.y + Math.sin(currPathAngle) * height) - y;
+			var newX = (center.x + Math.cos(_currPathAngle) * width) - x;
+			var newY = (center.y + Math.sin(_currPathAngle) * height) - y;
 			x += newX;
 			y += newY;
 
-			if (isRelativeParticles)
+			if (_isRelativeParticles)
 			{
 				moveParticles(newX, newY);
 			}
@@ -540,23 +611,23 @@ class CustomEmitter extends FlxEmitter
 	**/
 	private function moveTowardsNextPoint(elapsed:Float)
 	{
-		var nextPoint = currPathPoint < pathPoints.length - 1 ? currPathPoint + 1 : 0;
-		var dx = pathPoints[nextPoint].x - pathPoints[currPathPoint].x;
-		var dy = pathPoints[nextPoint].y - pathPoints[currPathPoint].y;
+		var nextPoint = _currPathPoint < _pathPoints.length - 1 ? _currPathPoint + 1 : 0;
+		var dx = _pathPoints[nextPoint].x - _pathPoints[_currPathPoint].x;
+		var dy = _pathPoints[nextPoint].y - _pathPoints[_currPathPoint].y;
 		var angle = Math.atan2(dy, dx);
-		var newX = pathWalkSpeed * elapsed * Math.cos(angle);
-		var newY = pathWalkSpeed * elapsed * Math.sin(angle);
+		var newX = _pathWalkSpeed * elapsed * Math.cos(angle);
+		var newY = _pathWalkSpeed * elapsed * Math.sin(angle);
 		x += newX;
 		y += newY;
 
-		if (isRelativeParticles)
+		if (_isRelativeParticles)
 		{
 			moveParticles(newX, newY);
 		}
 
-		if (distanceTo(pathPoints[nextPoint]) <= 1)
+		if (distanceTo(_pathPoints[nextPoint]) <= 1)
 		{
-			currPathPoint = nextPoint;
+			_currPathPoint = nextPoint;
 		}
 	}
 
