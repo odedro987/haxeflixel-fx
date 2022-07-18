@@ -8,13 +8,13 @@ import openfl.filters.BitmapFilter;
 
 class BoxBlurFilter extends BitmapFilter
 {
-	private var boxBlurShader:BoxBlurShader;
+	private var _boxBlurShader:BoxBlurShader;
 
 	public function new(blurSize:Float = 0.01, blurPasses:Int = 2)
 	{
 		super();
 
-		boxBlurShader = new BoxBlurShader(blurSize);
+		_boxBlurShader = new BoxBlurShader(blurSize);
 
 		// Round up to the next even number.
 		__numShaderPasses = makePassesEven(blurPasses);
@@ -23,10 +23,17 @@ class BoxBlurFilter extends BitmapFilter
 	@:noCompletion private override function __initShader(renderer:DisplayObjectRenderer, pass:Int, sourceBitmapData:BitmapData):Shader
 	{
 		// Flip horizontal and vertical blur each pass.
-		boxBlurShader.isVertictal.value[0] = pass % 2 == 0;
-		return boxBlurShader;
+		_boxBlurShader.isVertictal.value[0] = pass % 2 == 0;
+		return _boxBlurShader;
 	}
 
+	/**
+		* This function makes the passes even for even blur..
+		*
+		* @param passesNum 	Number of passes for the filter.
+
+		* @return  `0` if `passesNum` is negative, otherwise the closest even integer.
+	**/
 	private function makePassesEven(passesNum:Int):Int
 	{
 		if (passesNum <= 0)
