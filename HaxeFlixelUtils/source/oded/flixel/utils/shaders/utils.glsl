@@ -22,3 +22,13 @@ mat2 rotateRad(float rad){
 float sine(float x, float offset, float amplitude, float frequency){
     return amplitude * sin((x + offset) * frequency);
 }
+
+float combineSines(float x, float[16] amplitudes, float[16] frequencies, int cutoff){
+    float y = 0.;
+    for (int i = 0; i < 16; i+=1){
+        if(i == cutoff)
+            break;
+        y += amplitudes[i] * sin(x * frequencies[i]);
+    }
+    return y;
+}

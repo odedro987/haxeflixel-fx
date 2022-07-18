@@ -17,9 +17,21 @@ class WavyGrassShader extends FlxShader
 		
 		uniform float time;
 		uniform float delay;
+		uniform int xCutoff;
+		uniform int yCutoff;
+		uniform float xAmplitudes[16];
+		uniform float yAmplitudes[16];
+		uniform float xFrequencies[16];
+		uniform float yFrequencies[16];
 
-		float sine(float amplitude, float frequency) {
-            return amplitude * sin((time + delay) * frequency);
+		float combineSines(float amplitudes[16], float frequencies[16], int cutoff){
+			float y = 0.;
+			for (int i = 0; i < 16; i++){
+				if(i == cutoff)
+					break;
+				y += amplitudes[i] * sin((time + delay) * frequencies[i]);
+			}
+			return y;
 		}
 		
 		void main(void) {
@@ -29,18 +41,30 @@ class WavyGrassShader extends FlxShader
             
 			// if vertex is one of the top 2 vertices
 			if(openfl_TextureCoord.y == 0.){
-				float u_time = time + delay;
-				uv.x += sine(6.5, 1.) + sine(13., 2.) + sine(2.5, 0.6);
-				uv.y += sine(1.5, 1.) + sine(2., 2.) + sine(0.5, 0.6);
+				uv.x += combineSines(xAmplitudes, xFrequencies, xCutoff);
+				uv.y += combineSines(yAmplitudes, yFrequencies, yCutoff);
 			}
 			
 			gl_Position = openfl_Matrix * vec4(uv, openfl_Position.zw);
 		}")
-	public function new(delay:Float = 0)
+	public function new(delay:Float, xAmplitudes:Array<Float>, xFrequencies:Array<Float>, ?yAmplitudes:Array<Float>, ?yFrequencies:Array<Float>)
 	{
 		super();
 		this.alpha = new ShaderParameter();
 		this.time.value = [0.0];
 		this.delay.value = [delay];
+		this.xCutoff.value = [xAmplitudes.length];
+		this.yCutoff.value = [yAmplitudes != null ? xAmplitudes.length : 0];
+		this.xAmplitudes.value = padArray(xAmplitudes);
+		this.xFrequencies.value = padArray(xFrequencies);
+		this.yAmplitudes.value = yAmplitudes != null ? padArray(yAmplitudes) : [for (_ in 0...16) 0.0];
+		this.yFrequencies.value = yFrequencies != null ? padArray(yFrequencies) : [for (_ in 0...16) 0.0];
+	}
+
+	private function padArray(array:Array<Float>)
+	{
+		for (_ in 0...(16 - array.length)) array.push(0.0);
+
+		return array;
 	}
 }
