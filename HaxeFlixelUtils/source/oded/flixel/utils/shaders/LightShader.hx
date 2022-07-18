@@ -4,18 +4,22 @@ import flixel.FlxG;
 import flixel.system.FlxAssets.FlxShader;
 import flixel.util.FlxColor;
 import haxe.ds.Vector;
+import openfl.display.ShaderParameter;
 
 typedef LightSource =
 {
 	var x:Float;
 	var y:Float;
 	var intensity:Float;
-	var radius:Int;
+	var radius:Float;
 	var color:FlxColor;
 }
 
 class LightShader extends FlxShader
 {
+	private var sources:Array<ShaderParameter<Float>>;
+	private var colors:Array<ShaderParameter<Float>>;
+
 	@:glFragmentSource("
         #pragma header
 
@@ -137,11 +141,23 @@ class LightShader extends FlxShader
 		this.colors2.value = colorsToFloatArray(sources.slice(4, 8));
 		this.colors3.value = colorsToFloatArray(sources.slice(8, 12));
 		this.colors4.value = colorsToFloatArray(sources.slice(12, 16));
+
+		this.sources = [this.sources1, this.sources2, this.sources3, this.sources4];
+		this.colors = [this.colors1, this.colors2, this.colors3, this.colors4];
 	}
 
-	private function normalizeDistance(distance:Int)
+	public function updateLightSource(index:Int, newSource:LightSource)
 	{
-		return distance / FlxG.width;
+		var i = Std.int(index / 4);
+		var mod = index % 4;
+		sources[i].value[4 * mod] = newSource.x;
+		sources[i].value[4 * mod + 1] = newSource.y;
+		sources[i].value[4 * mod + 2] = newSource.intensity;
+		sources[i].value[4 * mod + 3] = normalizeDistance(newSource.radius);
+
+		colors[i].value[4 * mod] = newSource.color.redFloat;
+		colors[i].value[4 * mod + 1] = newSource.color.greenFloat;
+		colors[i].value[4 * mod + 2] = newSource.color.blueFloat;
 	}
 
 	private function lightSourcesToFloatArray(lightSources:Array<LightSource>):Array<Float>
@@ -190,9 +206,8 @@ class LightShader extends FlxShader
 		return array;
 	}
 
-	public function update()
+	private function normalizeDistance(distance:Float)
 	{
-		this.sources1.value[0] = FlxG.mouse.x;
-		this.sources1.value[1] = FlxG.mouse.y;
+		return distance / FlxG.width;
 	}
 }
